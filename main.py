@@ -26,10 +26,21 @@ class MplCanvas(FigureCanvasQTAgg):
         super(MplCanvas, self).__init__(fig)
 
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(QtWidgets.QMainWindow):
+
+    def __init__(self, *args, **kwargs):
+        super(Ui_MainWindow, self).__init__(*args, **kwargs)
+
+        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
+        self.sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
+
+        # Create toolbar, passing canvas as first parament, parent (self, the MainWindow) as second.
+        self.toolbar = NavigationToolbar(self.sc, self)
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(808, 621)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setEnabled(True)
         self.centralwidget.setMaximumSize(QtCore.QSize(801, 16777215))
@@ -43,17 +54,14 @@ class Ui_MainWindow(object):
 
 
 
-        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
-        self.sc.axes.plot([0,1,2,3,4], [10,1,20,3,40])
 
-        # Create toolbar, passing canvas as first parament, parent (self, the MainWindow) as second.
-        # self.toolbar = NavigationToolbar(self.sc, self)
 
 
 
 
         # self.textBrowser = QtWidgets.QTextBrowser(self.horizontalLayoutWidget)
         # self.textBrowser.setObjectName("textBrowser")
+        self.horizontalLayout.addWidget(self.toolbar)
         self.horizontalLayout.addWidget(self.sc)
 
         self.label = QtWidgets.QLabel(self.horizontalLayoutWidget)

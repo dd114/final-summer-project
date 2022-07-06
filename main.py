@@ -13,12 +13,21 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
+import numpy as np
+from scipy.fft import rfft, rfftfreq, irfft
+from math import sin, cos, sqrt
+
+
 class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
         super(MplCanvas, self).__init__(fig)
+
+
+    def myShow(self):
+        self.figure.show()
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
 
@@ -213,6 +222,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.gridLayout_2.addWidget(self.label_6, 1, 0, 1, 1)
 
+        self.pushButton_11 = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
+        self.pushButton_11.setObjectName("pushButton_11")
+        self.gridLayout_2.addWidget(self.pushButton_11, 1, 2, 1, 1)
+
         self.pushButton_9 = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
         self.pushButton_9.setObjectName("pushButton_9")
 
@@ -328,6 +341,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.lineEdit_5.setPlaceholderText(_translate("MainWindow", "500-1000"))
         self.lineEdit_6.setPlaceholderText(_translate("MainWindow", "0"))
         self.pushButton_4.setText(_translate("MainWindow", "Пересчитать"))
+        self.pushButton_11.setText(_translate("MainWindow", "Построить IFFT"))
         self.label_6.setText(_translate("MainWindow", "Значение амплитуды"))
         self.pushButton_9.setText(_translate("MainWindow", "Сохранить в файл"))
         # self.pushButton_5.setText(_translate("MainWindow", "PushButton"))
@@ -340,7 +354,77 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.lineEdit_8.setPlaceholderText(_translate("MainWindow", "5"))
 
     def addFunctions(self):
-        self.pushButton_3.clicked.connect(lambda : print(self.lineEdit_3.text()))
+        self.pushButton_3.clicked.connect(self.handlerButton_3)
+        self.pushButton_8.clicked.connect(self.handlerButton_8)
+        self.pushButton_11.clicked.connect(self.handlerButton_11)
+        self.pushButton_4.clicked.connect(self.handlerButton_4)
+        self.pushButton_9.clicked.connect(self.handlerButton_9)
+
+    def handlerButton_3(self):
+        if self.lineEdit_3.text() != '':
+            self.duration = float(self.lineEdit_7.text())
+            self.sampleRate = float(self.lineEdit_9.text())
+            self.N = int(self.duration * self.sampleRate)
+            self.X = np.linspace(0, self.duration, self.N, endpoint=False)
+            self.Y = np.array([float(eval(self.lineEdit_3.text())) for x in self.X]) # sin(x) + 0.3*sin(50*x)+0.7*sin(150*x)
+        elif self.lineEdit_4.text() != '':
+            f = open(self.lineEdit_4.text(), 'r')
+            tempX = list()
+            tempY = list()
+
+            for line in f:
+                tempX += [float(line.strip().split()[0])]
+                tempY += [float(line.strip().split()[1])]
+            f.close()
+
+            self.X = np.array(tempX)
+            self.Y = np.array(tempY)
+
+            self.sampleRate = int(1 / (self.X[1] - self.X[0]))
+            self.duration = int(self.X[-1] + (self.X[1] - self.X[0]))
+            self.N = int(self.duration * self.sampleRate)
+
+        # print(self.X, self.Y)
+        self.sc2.axes.cla()
+        self.sc1.axes.plot(self.X, self.Y)
+        self.sc1.draw()
+
+    def handlerButton_8(self):
+        f = open('function.txt', 'w+')
+
+        # print(len(self.X), len(self.Y))
+        # assert self.X != self.Y
+
+        print(*(f.write(str(i1) + ' ' + str(i2) + '\n') for i1, i2 in zip(self.X, self.Y)))
+        f.close()
+
+    def handlerButton_11(self):
+        self.Yif = irfft(self.Yf)
+        self.Xif = self.X
+
+        # print(self.X, self.Y)
+        self.sc2.axes.cla()
+        self.sc2.axes.plot(self.Xif, self.Yif)
+        self.sc2.draw()
+
+    def handlerButton_4(self):
+        self.normalizedY = np.int16((self.Y / self.Y.max()) * 32767)
+        self.Yf = rfft(self.Y)
+        self.Xf = rfftfreq(self.N, 1 / self.sampleRate)
+
+        # print(self.X, self.Y)
+        self.sc2.axes.cla()
+        self.sc2.axes.plot(self.Xf, np.abs(self.Yf))
+        self.sc2.draw()
+
+    def handlerButton_9(self):
+        f = open('FFTOfFunction.txt', 'w+')
+
+        # print(len(self.X), len(self.Y))
+        # assert self.X != self.Y
+
+        print(*(f.write(str(i1) + ' ' + str(i2) + '\n') for i1, i2 in zip(self.Xf, self.Yf)))
+        f.close()
 
 
 if __name__ == "__main__":

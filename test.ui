@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -153,7 +156,7 @@
          <item row="7" column="4">
           <widget class="QPushButton" name="pushButton_3">
            <property name="text">
-            <string>Пересчитать</string>
+            <string>Построить</string>
            </property>
           </widget>
          </item>
@@ -216,13 +219,6 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QPushButton" name="pushButton_4">
-           <property name="text">
-            <string>Пересчитать</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
@@ -234,6 +230,20 @@
           <widget class="QPushButton" name="pushButton_9">
            <property name="text">
             <string>Сохранить в файл</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QPushButton" name="pushButton_4">
+           <property name="text">
+            <string>Построить rFFT</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QPushButton" name="pushButton_11">
+           <property name="text">
+            <string>Построить IFFT</string>
            </property>
           </widget>
          </item>
@@ -302,7 +312,7 @@
          <item row="1" column="2">
           <widget class="QPushButton" name="pushButton_7">
            <property name="text">
-            <string>Пересчитать</string>
+            <string>Построить</string>
            </property>
           </widget>
          </item>

@@ -291,10 +291,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         self.gridLayout_3.addWidget(self.pushButton_7, 1, 2, 1, 1)
 
-        self.pushButton_6 = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
-        self.pushButton_6.setObjectName("pushButton_6")
-
-        self.gridLayout_3.addWidget(self.pushButton_6, 0, 2, 1, 1)
+        # self.pushButton_6 = QtWidgets.QPushButton(self.verticalLayoutWidget_2)
+        # self.pushButton_6.setObjectName("pushButton_6")
+        #
+        # self.gridLayout_3.addWidget(self.pushButton_6, 0, 2, 1, 1)
 
         self.label_7 = QtWidgets.QLabel(self.verticalLayoutWidget_2)
         self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
@@ -354,9 +354,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.label_9.setText(_translate("MainWindow", "Дисперсия = 0"))
         self.pushButton_10.setText(_translate("MainWindow", "Сохранить в файл"))
         self.pushButton_7.setText(_translate("MainWindow", "Пересчитать"))
-        self.pushButton_6.setText(_translate("MainWindow", "Пересчитать"))
+        # self.pushButton_6.setText(_translate("MainWindow", "Пересчитать"))
         self.label_7.setText(_translate("MainWindow", "Мат ожидание = 0"))
         self.lineEdit_8.setPlaceholderText(_translate("MainWindow", "5"))
+        self.lineEdit_8.setText(_translate("MainWindow", "5"))
 
     def addFunctions(self):
         self.pushButton_3.clicked.connect(self.handlerButton_3)
@@ -364,7 +365,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.pushButton_11.clicked.connect(self.handlerButton_11)
         self.pushButton_4.clicked.connect(self.handlerButton_4)
         self.pushButton_9.clicked.connect(self.handlerButton_9)
-        self.pushButton_6.clicked.connect(self.handlerButton_6)
+        self.pushButton_7.clicked.connect(self.handlerButton_7)
+        self.pushButton_10.clicked.connect(self.handlerButton_10)
 
     def handlerButton_3(self):
         if self.lineEdit_3.text() != '':
@@ -449,12 +451,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         print(*(f.write(str(i1) + ' ' + str(i2) + '\n') for i1, i2 in zip(self.Xf, self.Yf)))
         f.close()
 
-    def handlerButton_6(self):
+    def handlerButton_7(self):
         self.Xw = self.X
         self.Yw = self.Y
 
         if self.lineEdit_8.text() != '':
-            pass
+            # print('Before', self.Xw, self.Yw)
+            self.Xw, self.Yw = self.meanWindows(self.Xw, self.Yw, int(self.lineEdit_8.text()))
+            # print('After', self.Xw, self.Yw)
+            print('Sizes', len(self.Xw), len(self.Yw))
 
         self.label_9.setText('Дисперсия = ' + str(round(np.var(self.Yw), 2)))
         self.label_7.setText('Мат ожидание = ' + str(round(np.mean(self.Yw), 2)))
@@ -464,12 +469,24 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.sc3.axes.plot(self.Xw, self.Yw)
         self.sc3.draw()
 
-    def roll(a,      # ND array
-             b,      # rolling 1D window array
-             dx=1):  # step size (horizontal)
-        shape = a.shape[:-1] + (int((a.shape[-1] - b.shape[-1]) / dx) + 1,) + b.shape
-        strides = a.strides[:-1] + (a.strides[-1] * dx,) + a.strides[-1:]
-        return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
+    def handlerButton_10(self):
+        f = open('meanWindowFunction.txt', 'w+')
+
+        # print(len(self.X), len(self.Y))
+        # assert self.X != self.Y
+
+        print(*(f.write(str(i1) + ' ' + str(i2) + '\n') for i1, i2 in zip(self.Xw, self.Yw)))
+        f.close()
+
+    def meanWindows(self, x, y, dx):
+        count = len(y) - dx + 1
+        arr = np.zeros(count)
+        for i in range(count):
+            for j in range(dx):
+                arr[i] += y[i + j]
+        arr[i] /= dx
+
+        return (x[:-dx + 1], arr)
 
 
 

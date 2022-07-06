@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
@@ -328,18 +329,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         # self.pushButton.setText(_translate("MainWindow", "PushButton"))
         self.label_11.setText(_translate("MainWindow", "Частота дискретизации"))
         self.label_10.setText(_translate("MainWindow", "Длительность"))
-        self.lineEdit_9.setPlaceholderText(_translate("MainWindow", "1000"))
+        self.lineEdit_9.setText(_translate("MainWindow", "100"))
+        self.lineEdit_9.setPlaceholderText(_translate("MainWindow", "100"))
         self.pushButton_8.setText(_translate("MainWindow", "Сохранить в файл"))
+        self.lineEdit_7.setText(_translate("MainWindow", "5"))
         self.lineEdit_7.setPlaceholderText(_translate("MainWindow", "5"))
         self.lineEdit_4.setPlaceholderText(_translate("MainWindow", "signal.txt"))
         self.label_3.setText(_translate("MainWindow", "f(x)="))
-        self.lineEdit_3.setPlaceholderText(_translate("MainWindow", "2*sin(x)+0.5*sin(2x)"))
+        self.lineEdit_3.setPlaceholderText(_translate("MainWindow", "sin(x)+0.3*sin(50*x)+0.7*sin(150*x)"))
+        self.lineEdit_3.setText(_translate("MainWindow", "sin(x)+0.3*sin(50*x)+0.7*sin(150*x)"))
         self.label_4.setText(_translate("MainWindow", "Загрузить файл"))
         self.pushButton_3.setText(_translate("MainWindow", "Пересчитать"))
         # self.pushButton_2.setText(_translate("MainWindow", "PushButton"))
         self.label_5.setText(_translate("MainWindow", "В диапазоне"))
         self.lineEdit_5.setPlaceholderText(_translate("MainWindow", "500-1000"))
         self.lineEdit_6.setPlaceholderText(_translate("MainWindow", "0"))
+        self.lineEdit_6.setText(_translate("MainWindow", "0"))
         self.pushButton_4.setText(_translate("MainWindow", "Пересчитать"))
         self.pushButton_11.setText(_translate("MainWindow", "Построить IFFT"))
         self.label_6.setText(_translate("MainWindow", "Значение амплитуды"))
@@ -359,6 +364,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.pushButton_11.clicked.connect(self.handlerButton_11)
         self.pushButton_4.clicked.connect(self.handlerButton_4)
         self.pushButton_9.clicked.connect(self.handlerButton_9)
+        self.pushButton_6.clicked.connect(self.handlerButton_6)
 
     def handlerButton_3(self):
         if self.lineEdit_3.text() != '':
@@ -366,7 +372,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             self.sampleRate = float(self.lineEdit_9.text())
             self.N = int(self.duration * self.sampleRate)
             self.X = np.linspace(0, self.duration, self.N, endpoint=False)
-            self.Y = np.array([float(eval(self.lineEdit_3.text())) for x in self.X]) # sin(x) + 0.3*sin(50*x)+0.7*sin(150*x)
+            self.Y = np.array([float(eval(self.lineEdit_3.text())) for x in self.X]) # sin(x)+0.3*sin(50*x)+0.7*sin(150*x)
         elif self.lineEdit_4.text() != '':
             f = open(self.lineEdit_4.text(), 'r')
             tempX = list()
@@ -379,13 +385,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
             self.X = np.array(tempX)
             self.Y = np.array(tempY)
+        else:
+            msg = QMessageBox()
+            msg.setWindowTitle("Ошибка!")
+            msg.setText("Вы не ввели данные, приложение будет завершено")
+            msg.setIcon(QMessageBox.Warning)
+            msg.exec_()
+            exit(-1)
+
 
             self.sampleRate = int(1 / (self.X[1] - self.X[0]))
             self.duration = int(self.X[-1] + (self.X[1] - self.X[0]))
             self.N = int(self.duration * self.sampleRate)
 
         # print(self.X, self.Y)
-        self.sc2.axes.cla()
+        self.sc1.axes.cla()
         self.sc1.axes.plot(self.X, self.Y)
         self.sc1.draw()
 
@@ -408,9 +422,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.sc2.draw()
 
     def handlerButton_4(self):
-        self.normalizedY = np.int16((self.Y / self.Y.max()) * 32767)
+        # self.normalizedY = np.int16((self.Y / self.Y.max()) * 32767)
         self.Yf = rfft(self.Y)
         self.Xf = rfftfreq(self.N, 1 / self.sampleRate)
+
+        if self.lineEdit_5.text() != '':
+
+            start = int(int(self.lineEdit_5.text().split('-')[0]) * len(self.Xf) / (self.sampleRate / 2))
+            end = int(int(self.lineEdit_5.text().split('-')[1]) * len(self.Xf) / (self.sampleRate / 2))
+            print(start, end)
+            self.Yf[start:end] = int(self.lineEdit_6.text())
+            print('Yf has been changed')
+            # print('Xf', len(self.Xf), self.Xf)
 
         # print(self.X, self.Y)
         self.sc2.axes.cla()
@@ -425,6 +448,29 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
         print(*(f.write(str(i1) + ' ' + str(i2) + '\n') for i1, i2 in zip(self.Xf, self.Yf)))
         f.close()
+
+    def handlerButton_6(self):
+        self.Xw = self.X
+        self.Yw = self.Y
+
+        if self.lineEdit_8.text() != '':
+            pass
+
+        self.label_9.setText('Дисперсия = ' + str(round(np.var(self.Yw), 2)))
+        self.label_7.setText('Мат ожидание = ' + str(round(np.mean(self.Yw), 2)))
+
+        # print(self.X, self.Y)
+        self.sc3.axes.cla()
+        self.sc3.axes.plot(self.Xw, self.Yw)
+        self.sc3.draw()
+
+    def roll(a,      # ND array
+             b,      # rolling 1D window array
+             dx=1):  # step size (horizontal)
+        shape = a.shape[:-1] + (int((a.shape[-1] - b.shape[-1]) / dx) + 1,) + b.shape
+        strides = a.strides[:-1] + (a.strides[-1] * dx,) + a.strides[-1:]
+        return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
+
 
 
 if __name__ == "__main__":
